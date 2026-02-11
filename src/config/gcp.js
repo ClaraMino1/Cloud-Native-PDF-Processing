@@ -2,13 +2,15 @@ const { Storage } = require("@google-cloud/storage");
 const { Firestore } = require("@google-cloud/firestore");
 const config = require("./config");
 
-const storage = new Storage({ 
-  keyFilename: config.gcp.credentialsPath 
-});
+// const storage = new Storage({
+//   projectId: config.gcp.projectId
+// });
 
-const firestore = new Firestore({
-  keyFilename: config.gcp.credentialsPath,
-  projectId: config.gcp.projectId,
-});
+// const firestore = new Firestore({
+//   projectId: config.gcp.projectId,
+// });
+
+const storage = new Storage();
+const firestore = new Firestore();
 
 module.exports = { storage, firestore };

@@ -2,6 +2,7 @@ const express = require("express");
 const compression = require("compression");
 const config = require("./config/config");
 const reportRoutes = require("./routes/reports");
+const authenticate = require('./middlewares/auth');
 
 const app = express();
 
@@ -9,7 +10,7 @@ const app = express();
 app.use(compression());
 app.use(express.json());
 
-app.use("/", reportRoutes);
+app.use('/api/reports', authenticate, reportRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err); 

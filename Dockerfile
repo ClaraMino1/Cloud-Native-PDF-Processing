@@ -1,26 +1,29 @@
-FROM node:18-slim
+FROM node:18-slim AS builder
 
-# Instalamos las dependencias nativas para Sharp, GraphicsMagick y Ghostscript
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
     libvips-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install
+
+FROM node:18-slim
+
+RUN apt-get update && apt-get install -y \
+    libvips \
     graphicsmagick \
     ghostscript \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
-
-# Instalamos dependencias (Sharp se compilará para Linux aquí)
-RUN npm install
-
+COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY . .
 
-# Exponemos el puerto
 EXPOSE 8080
 
-# Comando de arranque
 CMD [ "node", "src/app.js" ]

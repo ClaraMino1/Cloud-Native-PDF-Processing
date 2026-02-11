@@ -49,7 +49,7 @@ router.post("/upload", upload.single("report"), async (req, res) => {
   res.status(201).json(finalData);
 });
 
-router.get("/reports/:id", async (req, res) => {
+router.get("/:id", async (req, res) => {
   const data = await getReportById(req.params.id);
   if (!data) return res.status(404).json({ error: "No encontrado" });
   res.json(data);

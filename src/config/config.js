@@ -1,13 +1,13 @@
 require('dotenv').config();
 
 module.exports = {
-  port: process.env.PORT,
+  port: process.env.PORT || 8080,
+  apiKey: process.env.API_KEY,
   gcp: {
     projectId: process.env.PROJECT_ID,
     location: process.env.LOCATION,
     processorId: process.env.PROCESSOR_ID,
     bucketName: process.env.BUCKET_NAME,
-    credentialsPath: process.env.GOOGLE_APPLICATION_CREDENTIALS
   },
   //24h
   urlExpiration: {

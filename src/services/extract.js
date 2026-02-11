@@ -2,7 +2,7 @@ const { DocumentProcessorServiceClient } = require('@google-cloud/documentai').v
 const config = require('../config/config');
 const { TIMEOUTS } = require("../utils/constants");
 
-const client = new DocumentProcessorServiceClient({ keyFilename: config.gcp.credentialsPath });
+const client = new DocumentProcessorServiceClient();
 
 async function extractVetData(pdfBuffer) {
 
