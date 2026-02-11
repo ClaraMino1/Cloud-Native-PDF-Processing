@@ -1,70 +1,60 @@
 const { DocumentProcessorServiceClient } = require('@google-cloud/documentai').v1;
-require('dotenv').config();
+const config = require('../config/config');
+const { TIMEOUTS } = require("../utils/constants");
 
-const client = new DocumentProcessorServiceClient({
-    keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS || 'credentials.json'
-});
+const client = new DocumentProcessorServiceClient({ keyFilename: config.gcp.credentialsPath });
 
 async function extractVetData(pdfBuffer) {
-    const bufferData = Buffer.from(pdfBuffer);
 
-    const request = {
-        name: `projects/${process.env.PROJECT_ID}/locations/${process.env.LOCATION}/processors/${process.env.PROCESSOR_ID}`,
-        rawDocument: {
-            content: bufferData.toString('base64'),
-            mimeType: 'application/pdf',
-        },
-    };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUTS.LONG);
 
-    const [result] = await client.processDocument(request);
-    const { document } = result;
-
-    const fullText = document.text;
-    const extractedData = {
-        patient: null,
-        owner: null,
-        diagnosis: null,
-        recommendations: null,
-        veterinarian: null
-    };
-
-        if (document.entities) {
-        for (const entity of document.entities) {
-            const type = entity.type.toLowerCase();
-            const value = entity.mentionText;
-            
-            if (type.includes('paciente') || type.includes('patient')) extractedData.patient = value;
-            if (type.includes('tutor') || type.includes('propietario') || type.includes('owner')) extractedData.owner = value;
-            if (type.includes('diagnóstico') || type.includes('diagnosis')) extractedData.diagnosis = value;
-            if (type.includes('recomendación') || type.includes('recommendation')) extractedData.recommendations = value;
-            if (type.includes('veterinario') || type.includes('profesional')) extractedData.veterinarian = value;
-        }
-    }
-
-    // Regex
-    if (!extractedData.patient) {
-        const match = fullText.match(/Paciente:\s*([^\n\r]*)/i);
-        if (match) extractedData.patient = match[1].trim();
-    }
+  try {
+    const name = `projects/${config.gcp.projectId}/locations/${config.gcp.location}/processors/${config.gcp.processorId}`;
     
-    if (!extractedData.owner) {
-        const match = fullText.match(/Tutor:\s*([^\n\r]*)/i) || fullText.match(/Propietario:\s*([^\n\r]*)/i);
-        if (match) extractedData.owner = match[1].trim();
-    }
+    const [result] = await client.processDocument({
+      name,
+      rawDocument: { content: pdfBuffer.toString('base64'), mimeType: 'application/pdf' }
+    }, { signal: controller.signal });
 
-    if (!extractedData.diagnosis) {
-        const match = fullText.match(/DIAGNÓSTICO RADIOGRÁFICO([\s\S]*?)(?=Notas:|$)/i) || fullText.match(/CONCLUSION([\s\S]*?)(?=Dr\.|$)/i);
-        if (match) extractedData.diagnosis = match[1].trim();
-    }
+    clearTimeout(timer);
 
-    return {
-        patient: extractedData.patient,
-        owner: extractedData.owner,
-        diagnosis: extractedData.diagnosis,
-        veterinarian: extractedData.veterinarian,
-        recommendations: extractedData.recommendations,
-        originalDocument: document 
+    const { document } = result;
+    const text = document.text;
+    
+    const extracted = {
+      patient: null,
+      owner: null,
+      diagnosis: null,
+      recommendations: null,
+      veterinarian: null
     };
+
+    //entities
+    document.entities?.forEach(entity => {
+      const type = entity.type.toLowerCase();
+      const val = entity.mentionText;
+
+      if (type.includes('paciente') || type.includes('patient')) extracted.patient = val;
+      if (type.includes('tutor') || type.includes('propietario') || type.includes('owner')) extracted.owner = val;
+      if (type.includes('diagnóstico') || type.includes('diagnosis') || type.includes('conclusion')) extracted.diagnosis = val;
+      if (type.includes('recomendacion') || type.includes('recommendation') || type.includes('notas')) extracted.recommendations = val;
+      if (type.includes('derivante') || type.includes('referido por') || type.includes('profesional')) extracted.veterinarian = val;
+    });
+
+    // Fallback
+    extracted.patient = extracted.patient || (text.match(/Paciente:\s*([^\n\r]*)/i)?.[1].trim());
+    extracted.owner = extracted.owner || (text.match(/(?:Tutor|Propietario):\s*([^\n\r]*)/i)?.[1].trim());
+    extracted.diagnosis = extracted.diagnosis || (text.match(/(?:DIAGNÓSTICO RADIOGRÁFICO|CONCLUSION)([\s\S]*?)(?=Notas:|Dr\.|$)/i)?.[1].trim());
+    extracted.veterinarian = extracted.veterinarian || (text.match(/(?:derivante|referido por|profesional):\s*([^\n\r]*)/i)?.[1].trim());
+    extracted.recommendations = extracted.recommendations || (text.match(/(?:notas|recomendaciones?):\s*([\s\S]*?)(?=\n[A-Z]|$)/i)?.[1].trim());
+
+    return { ...extracted, originalDocument: document };
+  } catch (error) {
+      clearTimeout(timer);
+      const msg = error.name === 'AbortError' ? 'Tiempo de espera agotado' : error.message;
+      throw new Error(`Error en Document AI: ${msg}`);
+  }
 }
 
 module.exports = { extractVetData };

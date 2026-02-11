@@ -1,14 +1,14 @@
-const path = require("path");
 const { Storage } = require("@google-cloud/storage");
 const { Firestore } = require("@google-cloud/firestore");
+const config = require("./config");
 
-const credentialsPath = path.join(__dirname, "../../credentials.json");
-
-const storage = new Storage({ keyFilename: credentialsPath });
+const storage = new Storage({ 
+  keyFilename: config.gcp.credentialsPath 
+});
 
 const firestore = new Firestore({
-  keyFilename: credentialsPath,
-  projectId: process.env.PROJECT_ID,
+  keyFilename: config.gcp.credentialsPath,
+  projectId: config.gcp.projectId,
 });
 
 module.exports = { storage, firestore };
