@@ -10,6 +10,7 @@ const { isValidPDF,validateReportData } = require("../utils/validators");
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+//only single pdf
 router.post("/upload", upload.single("report"), async (req, res) => {
 
   if (!req.file || !isValidPDF(req.file.buffer)) {

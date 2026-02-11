@@ -8,7 +8,10 @@ module.exports = {
     SHORT: 30 * SECONDS
   },
   FILES: {
-    MIN_IMG_DIM: 150,
+    ALLOWED_MIME: 'application/pdf',
+    MAGIC_BYTES: Buffer.from([0x25, 0x50, 0x44, 0x46]), 
+    MAX_SIZE: 10 * 1024 * 1024,
+    MIN_IMG_DIM: 350,
     EXPIRATION: 24 * HOURS
   },
   MIME_TYPES: { 
