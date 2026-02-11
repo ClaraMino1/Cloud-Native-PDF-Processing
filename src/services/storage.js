@@ -24,6 +24,7 @@ async function uploadFile(fileBuffer, fileName, folder = 'reports', expiration =
     
     clearTimeout(timer);
 
+    //Signed URLs
     const [url] = await blob.getSignedUrl({
       version: 'v4',
       action: "read",

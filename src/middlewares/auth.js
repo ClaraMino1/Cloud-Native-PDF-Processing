@@ -1,5 +1,3 @@
-const config = require('../config/config');
-
 const authenticate = (req, res, next) => {
   const apiKey = req.header('x-api-key');
 

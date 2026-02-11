@@ -51,7 +51,7 @@ router.post("/upload", upload.single("report"), async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   const data = await getReportById(req.params.id);
-  if (!data) return res.status(404).json({ error: "No encontrado" });
+  if (!data) return res.status(404).json({ error: "Not found" });
   res.json(data);
 });
 

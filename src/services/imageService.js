@@ -22,11 +22,12 @@ async function extractAndUploadImages(pdfBuffer, reportId) {
     await pdf.destroy();
     return allAssets;
   } catch (error) {
-    console.error("Error crítico en extracción:", error);
+    console.error("Error:", error);
     throw error;
   }
 }
 
+//search img
 async function processPage(pdf, pageNum, reportId) {
   let page = null;
   try {

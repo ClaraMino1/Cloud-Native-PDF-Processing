@@ -12,6 +12,7 @@ async function extractVetData(pdfBuffer) {
   try {
     const name = `projects/${config.gcp.projectId}/locations/${config.gcp.location}/processors/${config.gcp.processorId}`;
     
+    //send to Google Document AI
     const [result] = await client.processDocument({
       name,
       rawDocument: { content: pdfBuffer.toString('base64'), mimeType: 'application/pdf' }
