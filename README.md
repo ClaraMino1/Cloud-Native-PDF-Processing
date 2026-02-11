@@ -3,7 +3,9 @@
 A high-performance REST API built with Node.js and Google Cloud Platform (GCP) to automate the extraction, processing, and storage of veterinary ultrasound reports.
 
 ## Live API Endpoint
-**Base URL:** `https://your-cloud-run-url.a.run.app`
+**Base URL:** `https://vet-api-765024702651.us-central1.run.app`
+
+
 
 ---
 
